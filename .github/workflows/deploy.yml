@@ -1,9 +1,15 @@
-name: Test and deploy Telegram bot
+name: Test and guarded Cloudflare sync
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      confirm_existing_worker:
+        description: "I completed the WORKER_SYNC.md parity checklist for the existing Worker and this account. Leave unchecked otherwise."
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -37,8 +43,35 @@ jobs:
       - name: Validate Worker bundle
         run: npm run build:dry
 
+      - name: Confirm existing Worker in selected account
+        if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_existing_worker }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          node --input-type=module <<'NODE'
+          const { CLOUDFLARE_API_TOKEN: token, CLOUDFLARE_ACCOUNT_ID: accountId } = process.env;
+          if (!token || !/^[a-f0-9]{32}$/i.test(accountId || "")) {
+            console.error("Cloudflare API token or account ID is missing; no deployment attempted.");
+            process.exit(1);
+          }
+          const endpoint = `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts`;
+          const response = await fetch(endpoint, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const payload = await response.json().catch(() => null);
+          const exists = response.ok && payload?.success === true
+            && payload.result?.some((script) => script.id === "pride-one-bot");
+          if (!exists) {
+            console.error("The existing Worker was not found or cannot be read in this account; deployment aborted.");
+            process.exit(1);
+          }
+          console.log("Existing Worker confirmed in the selected account; this check made no changes.");
+          NODE
+
       - name: Deploy Worker
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_existing_worker }}
         run: npx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}

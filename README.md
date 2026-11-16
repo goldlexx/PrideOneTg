@@ -1,5 +1,8 @@
 # PRIDE ONE Booking Bot 2.0.2 — Durable Objects + SQLite
 
+> [!CAUTION]
+> This is a mirror of an already-running Cloudflare Worker. Do not treat this as a first deployment. A production update is manual, checks that the named Worker exists in the selected account, and requires an explicit confirmation after reviewing [`WORKER_SYNC.md`](WORKER_SYNC.md). No webhook reset or data migration is part of the GitHub workflow.
+
 Telegram-бот записи на тренировки (филиал P03 «Пролетарская»). Все данные о записях
 хранятся в SQLite внутри Cloudflare Durable Object, сообщения в Telegram отправляются
 через транзакционный outbox. Работает на тарифе Workers Free.
@@ -8,18 +11,19 @@ Telegram-бот записи на тренировки (филиал P03 «Пр�
 
 | Файл | Что это |
 |---|---|
-| `FIRST_RUN.md` | **Пошаговая инструкция первого запуска** — начинать с неё |
-| `UPDATE_2.0.2.md` | **Обновление уже работающего Worker 2.0.1 → 2.0.2** без повторной миграции и потери данных |
+| `WORKER_SYNC.md` | **Безопасная синхронизация с уже работающим Worker** — сверка конфигурации до любых изменений |
+| `FIRST_RUN.md` | Историческая инструкция первого запуска; не выполнять deployment-шаги для действующего Worker |
+| `UPDATE_2.0.2.md` | Историческая процедура обновления 2.0.1 → 2.0.2; для актуальной синхронизации не использовать |
 | `src/index.js` | Worker: приём webhook, проверка секрета, маршрутизация в Durable Object, `/admin/*` |
 | `src/branch-do.js` | Durable Object филиала: схема SQLite, бизнес-операции, outbox, миграция KV |
 | `wrangler.jsonc` | Конфигурация: Durable Object, миграция `v1`, KV, переменные, cron |
 | `package.json`, `.npmrc` | Скрипты; wrangler закреплён точной версией |
 | `scripts/preflight.mjs` | Проверка конфигурации и сборки без публикации (`npm run check`) |
 | `scripts/preflight-selftest.sh` | Самопроверка preflight на испорченных копиях конфигурации (во временной папке) |
-| `test/bot.test.mjs` | 30 тестов: сценарии A–P и проверки доступа |
-| `test/messages.test.mjs` | 10 тестов R1–R10: идемпотентность `/init`, отсутствие дублей панели и общего списка |
-| `test/cancel-notice.test.mjs` | 20 тестов U1–U20: публичное уведомление об отмене (оба сценария отмены, повторы webhook, дубли, сбои Telegram и SQL) |
-| `test/upgrade.test.mjs`, `test/fixtures/branch-do-2.0.1.js` | 4 теста V1–V4: обновление 2.0.1 → 2.0.2 и откат над одними и теми же данными SQLite (фикстура — замороженный код 2.0.1) |
+| `test/bot.test.mjs`, `test/messages.test.mjs` | Записи, доступ, webhook и синхронизация сообщений |
+| `test/board-repost.test.mjs`, `test/late-cancel.test.mjs` | Перепубликация панели и поздняя отмена |
+| `test/three-dates.test.mjs`, `test/miniapp.test.mjs` | Расписание и API Mini App |
+| `test/upgrade.test.mjs`, `test/fixtures/branch-do-2.0.1.js` | Обновление 2.0.1 → 2.0.2 и откат на тех же тестовых данных SQLite |
 | `test/emulator.mjs`, `test/harness.mjs` | Эмулятор Durable Object (настоящий SQLite), KV и Telegram с внедрением сбоев |
 | `test/mutation-check.sh` | Проверка, что тесты ловят поломку каждой ключевой защиты |
 | `TEST_REPORT.md` | Отчёт о фактически выполненных тестах |
@@ -219,32 +223,11 @@ D1, платные сервисы и сторонние сервисы не ис
 
 ## 6. Публикация в Cloudflare
 
-Порядок действий подробно описан в **`FIRST_RUN.md`**. Ключевое:
+Это зеркало уже работающего Worker. Push в `main` запускает тесты и `wrangler deploy --dry-run`, но не меняет production.
 
-1. **Код развёртывается ровно один раз.** Команда:
-   `npx wrangler deploy --secrets-file .secrets.deploy.env`.
-   Новый `ADMIN_SECRET` загружается вместе с кодом. `BOT_TOKEN` и `WEBHOOK_SECRET`, которых нет в
-   файле, по документации Cloudflare сохраняются.
-2. **`wrangler secret put` до развёртывания не используем.** Эта команда сразу разворачивает новую
-   версию Worker — со старым кодом.
-3. **Перед публикацией** выполняются только локальные проверки и чтение:
-   - `npm test`;
-   - `npm run check` — конфигурация, lock-файл, сборка Worker и Durable Object в один модуль;
-   - `npm run build:dry` — `wrangler deploy --dry-run`, ничего не публикует;
-   - `wrangler secret list`, `wrangler kv key get … --remote`.
-4. **Миграция `v1` (`new_sqlite_classes`)** создаёт класс Durable Object. На тарифе Free доступны только
-   SQLite-объекты. Запись `v1` нельзя менять или удалять после публикации.
-   В новых версиях Wrangler вместо `migrations` предлагается декларативное поле `exports`. Оба способа
-   поддерживаются, но одновременно их использовать нельзя, а переход на `exports` необратим. Проект
-   остаётся на `migrations`.
-5. **`wrangler deploy` заменяет** переменные, привязки и cron настройками из `wrangler.jsonc`. Секреты
-   сохраняются.
+Production workflow доступен только вручную после сверки действующего Worker с [`WORKER_SYNC.md`](WORKER_SYNC.md). Для запуска требуется выбрать `main` и подтвердить `confirm_existing_worker` только после проверки account, bindings, KV, Durable Object migration, cron, routes и имён runtime secrets. Перед deploy workflow проверяет, что `pride-one-bot` уже существует в выбранном Cloudflare account; если проверка не проходит, workflow останавливается.
 
-**Откат.** После миграции `v1` откат на версию до неё **невозможен**: по документации Cloudflare
-откат не может пересечь изменение жизненного цикла Durable Object.
-- Откат между версиями 2.x: `npx wrangler rollback`.
-- Аварийная остановка без потери данных: `"BRANCH_CHATS": "{}"` + `wrangler deploy`.
-- KV при развёртывании и миграции не изменяется.
+Не запускайте старые команды публикации, сброса webhook, миграции или rollback из исторических руководств для синхронизации текущего production Worker. `FIRST_RUN.md` и `UPDATE_2.0.2.md` сохранены как исторические документы.
 
 **Права бота в группе.** Чтобы убирать формы записи и ответы родителей, бот должен быть
 администратором с правом «Удаление сообщений». Без этого права всё работает, но формы

@@ -153,3 +153,7 @@ npx wrangler rollback
 **одна** лишняя копия. У `sendMessage` нет ключа идемпотентности, этого не обойти. Все остальные сбои
 (сеть, 5xx, 429, перезапуск, повтор webhook, ошибка SQL) дубля не создают. Лишнюю копию можно удалить
 вручную.
+# Historical procedure — do not run for the current production Worker
+
+> [!CAUTION]
+> This describes the one-time 2.0.1 → 2.0.2 upgrade and migration. The bot is already running in Cloudflare Workers. Do not redeploy, rerun migration, or change the Telegram webhook from this document. Use [`WORKER_SYNC.md`](WORKER_SYNC.md) for a read-only parity review first.
