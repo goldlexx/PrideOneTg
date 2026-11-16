@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0b0b0c">
+  <title>PRIDE ONE — запись</title>
+  <link rel="icon" href="./assets/paw-orange-sm.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script async src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <img class="logo" src="./assets/wordmark-white-sm.png" alt="PRIDE ONE" width="140" height="26">
+      <div id="branchBox" class="branch" hidden>
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="10" r="2.6"/></svg>
+        <span class="branch-text"><small>Филиал</small><b id="branchName"></b></span>
+        <svg id="branchChevron" class="ico chev" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="m6 9 6 6 6-6"/></svg>
+        <select id="branch" aria-label="Филиал" hidden></select>
+      </div>
+    </header>
+
+    <main id="view" aria-live="polite"></main>
+
+    <nav class="tabs" aria-label="Разделы">
+      <button data-tab="schedule" class="tab active">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+        <span>Расписание</span>
+      </button>
+      <button data-tab="my" class="tab">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h14v15l-2.3-1.6-2.4 1.6-2.3-1.6-2.4 1.6-2.3-1.6L5 19.5v-15Z"/><path d="m9 11 2 2 4-4.5"/></svg>
+        <span>Мои записи</span>
+        <i id="myBadge" class="badge" hidden></i>
+      </button>
+    </nav>
+  </div>
+
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-body" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div id="sheetContent"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# Только для локального `npx wrangler dev`. Скопируйте в .dev.vars и заполните. Не публикуйте этот файл.
+BOT_TOKEN=000000000:replace-me
+WEBHOOK_SECRET=replace-me
+ADMIN_SECRET=replace-me-with-at-least-16-chars
+BRANCH_CHATS={}

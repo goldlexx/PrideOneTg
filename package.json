@@ -1,0 +1,24 @@
+{
+  "name": "pride-one-bot",
+  "version": "2.0.2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --no-warnings --import ./test/register.mjs --test --test-concurrency=1 test/bot.test.mjs test/messages.test.mjs test/board-repost.test.mjs test/late-cancel.test.mjs test/three-dates.test.mjs test/upgrade.test.mjs test/miniapp.test.mjs",
+    "mutation": "bash test/mutation-check.sh",
+    "check:selftest": "bash scripts/preflight-selftest.sh",
+    "check": "node --no-warnings scripts/preflight.mjs",
+    "check:local": "node --no-warnings scripts/preflight.mjs --allow-placeholders",
+    "build:dry": "wrangler deploy --dry-run --outdir dist",
+    "verify": "npm run mini:build && npm test && npm run check && npm run build:dry",
+    "dev": "wrangler dev",
+    "mini:build": "node mini-app/build.mjs",
+    "mini:dev": "node mini-app/dev/mock-server.mjs"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "devDependencies": {
+    "wrangler": "4.107.1"
+  }
+}
