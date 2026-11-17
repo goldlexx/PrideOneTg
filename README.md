@@ -1,4 +1,14 @@
-# PRIDE ONE Booking Bot 2.0.2 — Durable Objects + SQLite
+<div align="center">
+
+# 🤖 PRIDE ONE Booking Bot
+
+Действующий Telegram-бот записи на тренировки на Cloudflare Workers.
+
+[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-f38020?logo=cloudflare&logoColor=fff)](https://workers.cloudflare.com/) [![SQLite](https://img.shields.io/badge/SQLite-003b57?logo=sqlite&logoColor=fff)](https://www.sqlite.org/)
+
+</div>
+
+Версия текущего Worker: `2.0.2`.
 
 > [!CAUTION]
 > This is a mirror of an already-running Cloudflare Worker. Do not treat this as a first deployment. A production update is manual, checks that the named Worker exists in the selected account, and requires an explicit confirmation after reviewing [`WORKER_SYNC.md`](WORKER_SYNC.md). No webhook reset or data migration is part of the GitHub workflow.
