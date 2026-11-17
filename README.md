@@ -285,12 +285,12 @@ npm run build:dry        # официальная сборка wrangler без �
 
 Тесты используют эмулятор, а не среду workerd. Подробности и ограничения — в `TEST_REPORT.md`.
 
-## Local configuration
+## Локальная конфигурация
 
 Create `.dev.vars` from `.dev.vars.example` and set the Telegram bot token, webhook secret, admin secret, and `BRANCH_CHATS` JSON map for local development. Keep `.dev.vars` private; it is ignored by Git. Never put Telegram credentials in `wrangler.jsonc`.
 
 The production Wrangler configuration keeps existing dashboard variables during deployment and does not store chat IDs in source. For a new Cloudflare Worker, add the required runtime values directly in Cloudflare or via `wrangler secret put`; do not commit them.
 
-## GitHub Actions deployment
+## Публикация через GitHub Actions
 
 Pushes to `main` run the Mini App build, tests, and Wrangler dry run before deployment. To enable the final deploy step, add a Cloudflare API token with only the Workers deployment permissions this account requires as the repository Actions secret `CLOUDFLARE_API_TOKEN`. Set bot credentials and the branch chat map in the Worker runtime; those values are intentionally not supplied by this public repository.
